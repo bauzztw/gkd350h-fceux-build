@@ -25,9 +25,9 @@ jobs:
 
       - name: Install legacy GCW0 toolchain
         run: |
-          wget -O /tmp/gcw0-toolchain.tar.xz http://od.abstraction.se/opendingux/toolchain/opendingux-gcw0-toolchain.2014-08-20.tar.xz
+          wget -O /tmp/gcw0-toolchain.tar.bz2 https://github.com/Ninoh-FOX/toolchain/releases/download/08-09-2021/opendingux-gcw0-toolchain.2021-09-08.tar.bz2
           sudo mkdir -p /opt
-          sudo tar -xJf /tmp/gcw0-toolchain.tar.xz -C /opt
+          sudo tar -xjf /tmp/gcw0-toolchain.tar.bz2 -C /opt
           test -d /opt/gcw0-toolchain
 
       - name: Build OpenDingux 2014 OPK
