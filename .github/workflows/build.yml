@@ -34,12 +34,12 @@ jobs:
         run: |
           cd fceux
           mkdir -p bin
-          make TOOLCHAIN=/opt/gcw0-toolchain TARGET=fceux_gkd350h_optimized_safeexit ODVERSION=2014 -f Makefile -j2
+          make TOOLCHAIN=/opt/gcw0-toolchain TARGET=fceux_gkd350h_optimized_safevideo ODVERSION=2014 -f Makefile -j2
           find bin -maxdepth 1 -type f -name '*.opk' -ls
 
       - name: Upload OPK
         uses: actions/upload-artifact@v4
         with:
-          name: fceux-gkd350h-optimized-safeexit
+          name: fceux-gkd350h-optimized-safevideo
           path: fceux/bin/*.opk
           if-no-files-found: error
