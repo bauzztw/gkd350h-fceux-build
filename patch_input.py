@@ -57,4 +57,60 @@ s = s.replace(
 )
 p.write_text(s)
 
-print("Applied GKD350H optimized defaults and 300 ms L+R menu hold")
+# 3) Graceful handling of launcher/system termination.
+#    The signal handler only sets a sig_atomic_t flag. All cleanup remains
+#    in the normal main loop and therefore stays async-signal-safe.
+p = Path("fceux/src/drivers/dingux-sdl/dingoo.cpp")
+s = p.read_text()
+
+anchor = """static void DriverKill(void);
+"""
+insert = """static void DriverKill(void);
+
+static volatile sig_atomic_t gkd350h_terminate_requested = 0;
+
+static void GKD350H_TerminationHandler(int sig)
+{
+\t(void)sig;
+\tgkd350h_terminate_requested = 1;
+}
+"""
+if anchor not in s:
+    raise SystemExit("Could not find DriverKill declaration")
+s = s.replace(anchor, insert, 1)
+
+main_anchor = """int main(int argc, char *argv[]) {
+
+\tint error;
+"""
+main_new = """int main(int argc, char *argv[]) {
+
+\tint error;
+
+\t// GKD350H launcher/system may terminate apps without generating SDL_QUIT.
+\t// Convert catchable termination signals into a normal FCEUX shutdown path.
+\tsignal(SIGTERM, GKD350H_TerminationHandler);
+\tsignal(SIGINT, GKD350H_TerminationHandler);
+\tsignal(SIGHUP, GKD350H_TerminationHandler);
+"""
+if main_anchor not in s:
+    raise SystemExit("Could not find main() anchor")
+s = s.replace(main_anchor, main_new, 1)
+
+loop_old = """\twhile(GameInfo)
+\t{
+\t\tDoFun(frameskip,periodic_saves);
+\t}
+"""
+loop_new = """\twhile(GameInfo && !gkd350h_terminate_requested)
+\t{
+\t\tDoFun(frameskip,periodic_saves);
+\t}
+"""
+if loop_old not in s:
+    raise SystemExit("Could not find game loop")
+s = s.replace(loop_old, loop_new, 1)
+
+p.write_text(s)
+
+print("Applied GKD350H optimized defaults, 300 ms L+R menu hold, and graceful system-exit handling")
