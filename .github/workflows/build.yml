@@ -2,7 +2,7 @@ name: Build GKD350H FCEUX OPK
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -10,47 +10,22 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Install host tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential git wget xz-utils squashfs-tools
+        run: sudo apt-get update && sudo apt-get install -y build-essential git wget xz-utils squashfs-tools
 
       - name: Checkout build repository
         uses: actions/checkout@v4
 
       - name: Fetch FCEUX OpenDingux source
-        run: |
-          git clone --depth 1 --branch opendingux https://github.com/plrguez/fceux-for-retrogame.git fceux
+        run: git clone --depth 1 --branch opendingux https://github.com/plrguez/fceux-for-retrogame.git fceux
 
       - name: Modify GKD350H menu input
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path("fceux/src/drivers/dingux-sdl/input.cpp")
-          s = p.read_text()
-          old = """\t// Power flick (SDLK_HOME) to enter GUI
-\tif (_keyonly(DINGOO_L2)
-\t\t|| MenuRequested) {
-"""
-          new = """\t// Power flick (SDLK_HOME) / L2 to enter GUI.
-\t// GKD350H intercepts POWER and has no L2/R2, so use L+R too.
-\tconst bool gkd350h_lr_menu =
-\t\tispressed(DINGOO_L) && ispressed(DINGOO_R);
-
-\tif (_keyonly(DINGOO_L2)
-\t\t|| MenuRequested
-\t\t|| gkd350h_lr_menu) {
-\t\tresetkey(DINGOO_L);
-\t\tresetkey(DINGOO_R);
-"""
-          if old not in s:
-              raise SystemExit("Expected input.cpp menu block not found")
-          p.write_text(s.replace(old, new, 1))
-          PY
+          python3 patch_input.py
           grep -n -A14 -B2 "GKD350H intercepts" fceux/src/drivers/dingux-sdl/input.cpp
 
       - name: Install legacy GCW0 toolchain
         run: |
-          wget -O /tmp/gcw0-toolchain.tar.xz             http://od.abstraction.se/opendingux/toolchain/opendingux-gcw0-toolchain.2014-08-20.tar.xz
+          wget -O /tmp/gcw0-toolchain.tar.xz http://od.abstraction.se/opendingux/toolchain/opendingux-gcw0-toolchain.2014-08-20.tar.xz
           sudo mkdir -p /opt
           sudo tar -xJf /tmp/gcw0-toolchain.tar.xz -C /opt
           test -d /opt/gcw0-toolchain
