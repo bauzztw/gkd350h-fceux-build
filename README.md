@@ -22,8 +22,6 @@ opk檔案位置：
 - SD卡
 - ├─ apps
 - │  ├─ fceux_gcw0-2.6.6.opk
-- │  └─ nestopia.opk
-- │
 - └─ roms
 -    └─ nes
 -       ├─ game1.nes
