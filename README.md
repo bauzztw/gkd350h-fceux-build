@@ -9,7 +9,7 @@ Change:
 Base source:
 - plrguez/fceux-for-retrogame, branch: opendingux
 
-
+中文說明
 - L + R 按住約 0.3 秒進入選單
 - Hardware scaling
 - 4:3 畫面比例
