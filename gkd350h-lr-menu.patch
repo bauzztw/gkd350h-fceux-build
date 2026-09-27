@@ -1,0 +1,20 @@
+diff --git a/src/drivers/dingux-sdl/input.cpp b/src/drivers/dingux-sdl/input.cpp
+--- a/src/drivers/dingux-sdl/input.cpp
++++ b/src/drivers/dingux-sdl/input.cpp
+@@ -300,8 +300,15 @@
+-	// Power flick (SDLK_HOME) to enter GUI
+-	if (_keyonly(DINGOO_L2)
+-		|| MenuRequested) {
++	// Power flick (SDLK_HOME) / L2 to enter GUI.
++	// GKD350H intercepts POWER and has no L2/R2, so use L+R too.
++	const bool gkd350h_lr_menu =
++		ispressed(DINGOO_L) && ispressed(DINGOO_R);
++
++	if (_keyonly(DINGOO_L2)
++		|| MenuRequested
++		|| gkd350h_lr_menu) {
++		resetkey(DINGOO_L);
++		resetkey(DINGOO_R);
+ 		SilenceSound(1);
+ 		FCEUGUI_Run();
+ 		SilenceSound(0);
