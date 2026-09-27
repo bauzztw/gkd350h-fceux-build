@@ -1,0 +1,47 @@
+name: Build GKD350H FCEUX OPK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install host tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git wget xz-utils squashfs-tools
+
+      - name: Checkout build repository
+        uses: actions/checkout@v4
+
+      - name: Fetch FCEUX OpenDingux source
+        run: |
+          git clone --depth 1 --branch opendingux https://github.com/plrguez/fceux-for-retrogame.git fceux
+
+      - name: Apply GKD350H patch
+        run: |
+          cd fceux
+          git apply ../gkd350h-lr-menu.patch
+
+      - name: Install legacy GCW0 toolchain
+        run: |
+          wget -O /tmp/gcw0-toolchain.tar.xz             http://od.abstraction.se/opendingux/toolchain/opendingux-gcw0-toolchain.2014-08-20.tar.xz
+          sudo mkdir -p /opt
+          sudo tar -xJf /tmp/gcw0-toolchain.tar.xz -C /opt
+          test -d /opt/gcw0-toolchain
+
+      - name: Build OpenDingux 2014 OPK
+        run: |
+          cd fceux
+          make TOOLCHAIN=/opt/gcw0-toolchain TARGET=fceux_gkd350h_lrmenu ODVERSION=2014 -f Makefile -j2
+          find bin -maxdepth 1 -type f -name '*.opk' -ls
+
+      - name: Upload OPK
+        uses: actions/upload-artifact@v4
+        with:
+          name: fceux-gkd350h-lrmenu
+          path: fceux/bin/*.opk
+          if-no-files-found: error
