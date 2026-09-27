@@ -152,3 +152,30 @@ if old not in s:
 p.write_text(s.replace(old, new, 1))
 
 print("Disabled unsafe L+X runtime video reset on GKD350H")
+
+
+# 5) Disable GKD350H-unsafe runtime fullscreen toggle (R+X).
+p = Path("fceux/src/drivers/dingux-sdl/input.cpp")
+s = p.read_text()
+
+old = """\t\tif(_keyonly(DINGOO_X)) { // R + X  toggle fullscreen
+\t\t\textern int s_fullscreen; // from dingoo_video.cpp
+\t\t\ts_fullscreen = (s_fullscreen + 1) % 5;
+\t\t\tg_config->setOption("SDL.Fullscreen", s_fullscreen);
+\t\t\tFCEUD_DriverReset();
+\t\t\tdingoo_clear_video();
+\t\t\tresetkey(DINGOO_X);
+\t\t}
+"""
+
+new = """\t\tif(_keyonly(DINGOO_X)) { // GKD350H: disable runtime fullscreen toggle
+\t\t\tFCEU_DispMessage("Video mode locked", 0);
+\t\t\tresetkey(DINGOO_X);
+\t\t}
+"""
+
+if old not in s:
+    raise SystemExit("Could not find R+X fullscreen toggle block")
+p.write_text(s.replace(old, new, 1))
+
+print("Disabled unsafe R+X runtime fullscreen reset on GKD350H")
