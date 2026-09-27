@@ -8,3 +8,12 @@ Change:
 
 Base source:
 - plrguez/fceux-for-retrogame, branch: opendingux
+
+
+L + R 按住約 0.3 秒進入選單
+Hardware scaling
+4:3 畫面比例
+Nearest 清晰濾鏡
+Frameskip 0
+新增 SIGTERM / SIGINT / SIGHUP 安全退出處理
+系統要求結束 FCEUX 時，盡量先正常關閉遊戲、視訊與音效，再退出
