@@ -114,3 +114,41 @@ s = s.replace(loop_old, loop_new, 1)
 p.write_text(s)
 
 print("Applied GKD350H optimized defaults, 300 ms L+R menu hold, and graceful system-exit handling")
+
+
+# 4) Disable GKD350H-unsafe runtime aspect toggle (L+X).
+p = Path("fceux/src/drivers/dingux-sdl/input.cpp")
+s = p.read_text()
+
+old = """\t\tif(_keyonly(DINGOO_X)) { // R + X Pixel Astect Ratio
+\t\t\tif (s_fullscreen == 1) {
+\t\t\t\tint aspect_select;
+\t\t\t\tchar as_message[4];
+\t\t\t\tg_config->getOption("SDL.AspectSelect", &aspect_select);
+\t\t\t\taspect_select = (aspect_select + 1) % 3;
+\t\t\t\tg_config->setOption("SDL.AspectSelect", aspect_select);
+\t\t\t\tswitch (aspect_select) {
+\t\t\t\tcase 0: snprintf(as_message,4,"1:1"); break;
+\t\t\t\tcase 1: snprintf(as_message,4,"8:7"); break;
+\t\t\t\tcase 2: 
+\t\t\t\tdefault: snprintf(as_message,4,"4:3"); break;
+\t\t\t\t}
+\t\t\t\tFCEU_DispMessage("Aspect %s",0,as_message);
+\t\t\t\tFCEUD_DriverReset();
+\t\t\t\tdingoo_clear_video();
+\t\t\t}
+\t\t\tresetkey(DINGOO_X);
+\t\t}
+"""
+
+new = """\t\tif(_keyonly(DINGOO_X)) { // GKD350H: disable runtime aspect toggle
+\t\t\tFCEU_DispMessage("Aspect locked: 4:3", 0);
+\t\t\tresetkey(DINGOO_X);
+\t\t}
+"""
+
+if old not in s:
+    raise SystemExit("Could not find L+X aspect toggle block")
+p.write_text(s.replace(old, new, 1))
+
+print("Disabled unsafe L+X runtime video reset on GKD350H")
