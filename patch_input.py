@@ -181,61 +181,14 @@ p.write_text(s.replace(old, new, 1))
 print("Disabled unsafe R+X runtime fullscreen reset on GKD350H")
 
 
-# 6) Prefer external SD card for all FCEUX config/save data.
+# 6) Keep the original FCEUX base directory for maximum GKD350H compatibility.
+#    Only make the initial ROM browser prefer the external SD root.
 p = Path("fceux/src/drivers/dingux-sdl/config.cpp")
 s = p.read_text()
-
-old = """#else
-\tchar *home = getenv("HOME");
-\tif (home) {
-\t\tdir = std::string(home) + "/.fceux";
-\t} else {
-#ifdef WIN32
-"""
-
-new = """#else
-\t// GKD350H: prefer external SD card so settings survive internal-storage issues.
-\tif (access("/media/sdcard", W_OK) == 0) {
-\t\tdir = "/media/sdcard/.fceux-gkd350h";
-\t} else if (access("/media/SDCARD", W_OK) == 0) {
-\t\tdir = "/media/SDCARD/.fceux-gkd350h";
-\t} else {
-\t\tchar *home = getenv("HOME");
-\t\tif (home) {
-\t\t\tdir = std::string(home) + "/.fceux";
-\t\t} else {
-#ifdef WIN32
-"""
-
-if old not in s:
-    raise SystemExit("Could not find GetBaseDirectory external-storage anchor")
-s = s.replace(old, new, 1)
-
-old_tail = """#else
-\t\tdir = "";
-#endif
-\t}
-#endif
-}
-"""
-new_tail = """#else
-\t\t\tdir = "";
-#endif
-\t\t}
-\t}
-#endif
-}
-"""
-if old_tail not in s:
-    raise SystemExit("Could not find GetBaseDirectory closing block")
-s = s.replace(old_tail, new_tail, 1)
-
-# Default ROM browser path: external SD root when available.
 s = s.replace(
     'config->addOption("_lastopenfile", "SDL.LastOpenFile", home_dir);',
     'config->addOption("_lastopenfile", "SDL.LastOpenFile", access("/media/sdcard", R_OK) == 0 ? "/media/sdcard" : (access("/media/SDCARD", R_OK) == 0 ? "/media/SDCARD" : home_dir));'
 )
-
 p.write_text(s)
 
 # 7) Hard-code requested default gamepad mapping for GKD350H:
